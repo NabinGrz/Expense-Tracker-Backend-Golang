@@ -20,6 +20,8 @@ func Router(db *gorm.DB) *gin.Engine {
 	expense.GET("/getExpenses", func(ctx *gin.Context) { expensesController.GetExpenses(ctx, db) })
 	expense.GET("/getSelectedDateExpenses", func(ctx *gin.Context) { expensesController.GetSelectedDateExpenses(ctx, db) })
 	expense.GET("/getSelectedRangeExpenses", func(ctx *gin.Context) { expensesController.GetSelectedRangeExpenses(ctx, db) })
+	expense.GET("/searchExpense", func(ctx *gin.Context) { expensesController.SearchExpense(ctx, db) })
+	expense.GET("/searchExpenseWithCategory", func(ctx *gin.Context) { expensesController.SpecificCategoryExpenses(ctx, db) })
 
 	balance := expenseApi.Group("/balance")
 	balance.PUT("/updateCash", func(ctx *gin.Context) { expensesController.UpdateAmount(ctx, db, true) })

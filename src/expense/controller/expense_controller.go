@@ -13,6 +13,46 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
+func SpecificCategoryExpenses(c *gin.Context, db *gorm.DB) {
+	categoryId := c.Query("categoryId")
+
+	if err := uuid.Validate(categoryId); err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Please enter a validate category ID"})
+		return
+	}
+	var expenses []expenseModels.Expense
+	if err := db.Preload("Category").Where("category_id = ?", categoryId).Find(&expenses).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+	var totalAmount float64
+	for _, ex := range expenses {
+		totalAmount += ex.Amount
+	}
+	c.JSON(http.StatusOK, gin.H{"expenses": expenses, "total_count": len(expenses), "total_amount": totalAmount})
+}
+
+func SearchExpense(c *gin.Context, db *gorm.DB) {
+	keyword := c.Query("keyword")
+
+	if keyword == "" {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Please enter a keyword to search expense"})
+		return
+	}
+	searchPattern := "%" + keyword + "%"
+	var expenses []expenseModels.Expense
+
+	if err := db.Joins("JOIN categories ON categories.id = expenses.category_id").
+		Where("expenses.name ILIKE ? OR categories.name ILIKE ?", searchPattern, searchPattern).
+		Preload("Category").
+		Find(&expenses).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"expenses": expenses, "total_count": len(expenses)})
+
+}
 func GetSelectedRangeExpenses(c *gin.Context, db *gorm.DB) {
 	startDateStr := c.Query("start_date")
 	endDateStr := c.Query("end_date")
@@ -53,8 +93,11 @@ func GetSelectedRangeExpenses(c *gin.Context, db *gorm.DB) {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"expenses": expenses, "total_count": len(expenses)})
+	var totalAmount float64
+	for _, ex := range expenses {
+		totalAmount += ex.Amount
+	}
+	c.JSON(http.StatusOK, gin.H{"expenses": expenses, "total_count": len(expenses), "total_amount": totalAmount})
 }
 func GetSelectedDateExpenses(c *gin.Context, db *gorm.DB) {
 	// Example date input provided by user
@@ -70,8 +113,11 @@ func GetSelectedDateExpenses(c *gin.Context, db *gorm.DB) {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"expenses": expenses, "total_count": len(expenses)})
+	var totalAmount float64
+	for _, ex := range expenses {
+		totalAmount += ex.Amount
+	}
+	c.JSON(http.StatusOK, gin.H{"expenses": expenses, "total_count": len(expenses), "total_amount": totalAmount})
 }
 
 func GetExpenseDetail(c *gin.Context, db *gorm.DB) {
@@ -98,8 +144,11 @@ func GetExpenses(c *gin.Context, db *gorm.DB) {
 		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"expenses": expenses, "total_count": len(expenses)})
+	var totalAmount float64
+	for _, ex := range expenses {
+		totalAmount += ex.Amount
+	}
+	c.JSON(http.StatusOK, gin.H{"expenses": expenses, "total_count": len(expenses), "total_amount": totalAmount})
 
 }
 
